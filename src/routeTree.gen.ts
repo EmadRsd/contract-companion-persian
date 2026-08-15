@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContractsIndexRouteImport } from './routes/_authenticated/contracts.index'
+import { Route as AuthenticatedContractsContractIdRouteImport } from './routes/_authenticated/contracts.$contractId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,17 +41,25 @@ const AuthenticatedContractsIndexRoute =
     path: '/contracts/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedContractsContractIdRoute =
+  AuthenticatedContractsContractIdRouteImport.update({
+    id: '/contracts/$contractId',
+    path: '/contracts/$contractId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/contracts/$contractId': typeof AuthenticatedContractsContractIdRoute
   '/contracts/': typeof AuthenticatedContractsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/contracts/$contractId': typeof AuthenticatedContractsContractIdRoute
   '/contracts': typeof AuthenticatedContractsIndexRoute
 }
 export interface FileRoutesById {
@@ -59,19 +68,22 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/contracts/$contractId': typeof AuthenticatedContractsContractIdRoute
   '/_authenticated/contracts/': typeof AuthenticatedContractsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/contracts/'
+  fullPaths:
+    '/' | '/auth' | '/dashboard' | '/contracts/$contractId' | '/contracts/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/contracts'
+  to: '/' | '/auth' | '/dashboard' | '/contracts/$contractId' | '/contracts'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/contracts/$contractId'
     | '/_authenticated/contracts/'
   fileRoutesById: FileRoutesById
 }
@@ -118,16 +130,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContractsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contracts/$contractId': {
+      id: '/_authenticated/contracts/$contractId'
+      path: '/contracts/$contractId'
+      fullPath: '/contracts/$contractId'
+      preLoaderRoute: typeof AuthenticatedContractsContractIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedContractsContractIdRoute: typeof AuthenticatedContractsContractIdRoute
   AuthenticatedContractsIndexRoute: typeof AuthenticatedContractsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedContractsContractIdRoute: AuthenticatedContractsContractIdRoute,
   AuthenticatedContractsIndexRoute: AuthenticatedContractsIndexRoute,
 }
 
