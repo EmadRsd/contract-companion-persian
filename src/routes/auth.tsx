@@ -40,7 +40,10 @@ function AuthPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return toast.error("ورود ناموفق بود: " + error.message);
+    if (error) {
+      toast.error("ورود ناموفق بود: " + error.message);
+      return;
+    }
     toast.success("خوش آمدید");
     navigate({ to: "/dashboard", replace: true });
   }
@@ -57,10 +60,14 @@ function AuthPage() {
       },
     });
     setLoading(false);
-    if (error) return toast.error("ثبت‌نام ناموفق بود: " + error.message);
+    if (error) {
+      toast.error("ثبت‌نام ناموفق بود: " + error.message);
+      return;
+    }
     if (!data.session) {
       setPendingConfirm(true);
-      return toast.success("ایمیل تأیید برای شما ارسال شد");
+      toast.success("ایمیل تأیید برای شما ارسال شد");
+      return;
     }
     navigate({ to: "/dashboard", replace: true });
   }
@@ -69,7 +76,10 @@ function AuthPage() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("ورود با گوگل ناموفق بود");
+    if (result.error) {
+      toast.error("ورود با گوگل ناموفق بود");
+      return;
+    }
     if (result.redirected) return;
     navigate({ to: "/dashboard", replace: true });
   }
