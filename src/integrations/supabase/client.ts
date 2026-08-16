@@ -3,8 +3,8 @@
 // to run entirely against the local MongoDB-backed server (no external Supabase required).
 
 // Determine API base. Prefer Vite's import.meta.env on the client, fall back to process.env on SSR
-const API_BASE = (typeof window !== 'undefined' && typeof import !== 'undefined' && (import as any).meta && (import as any).meta.env && (import as any).meta.env.VITE_API_BASE)
-  ? (import as any).meta.env.VITE_API_BASE.replace(/\/+$/, '')
+const API_BASE = (typeof window !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_API_BASE)
+  ? String(import.meta.env.VITE_API_BASE).replace(/\/+$|\\/g, '')
   : (process.env.VITE_API_BASE || '/api');
 
 function apiPath(path: string) {
