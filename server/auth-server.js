@@ -1,3 +1,4 @@
+import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { MongoClient } from 'mongodb';
@@ -137,6 +138,7 @@ async function createRoleHandler({ name, permissions, authUser }) {
 }
 
 const app = express();
+app.use(cors({ origin: process.env.VITE_FRONTEND_ORIGIN || 'http://localhost:8080', credentials: true }));
 app.use(bodyParser.json());
 
 app.post('/api/auth/signin', async (req, res) => {
