@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -5,12 +6,19 @@ import { MongoClient } from 'mongodb';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
+// Load .env when present so env vars in project root are available in dev
+dotenv.config();
+
 const TOKEN_COOKIE_NAME = 'cc_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 function getCookieHeader(domain) {
   const domainPart = domain ? `; Domain=${domain}` : '';
-  return `HttpOnly; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Lax${domainPart}`;
+  // Allow overriding SameSite via COOKIE_SAMESITE env var for testing.
+  // Default: in production use 'None' (with Secure); otherwise use 'Lax' for local dev.
+  const sameSite = process.env.COOKIE_SAMESITE || (process.env.NODE_ENV === 'production' ? 'None' : 'Lax');
+  const secure = sameSite === 'None' ? '; Secure' : '';
+  return `HttpOnly; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=${sameSite}${secure}${domainPart}`;
 }
 
 let _mongoClient = null;
@@ -27,23 +35,28 @@ async function getDb() {
 }
 
 async function seedRootIfNeeded() {
-  const db = await getDb();
-  const users = db.collection('users');
-  const rootEmail = process.env.ROOT_EMAIL;
-  const rootPassword = process.env.ROOT_PASSWORD;
-  if (!rootEmail || !rootPassword) return;
+  try {
+    const db = await getDb();
+    const users = db.collection('users');
+    const rootEmail = process.env.ROOT_EMAIL;
+    const rootPassword = process.env.ROOT_PASSWORD;
+    if (!rootEmail || !rootPassword) return;
 
-  const existing = await users.findOne({ email: rootEmail.toLowerCase() });
-  if (existing) return;
+    const existing = await users.findOne({ email: rootEmail.toLowerCase() });
+    if (existing) return;
 
-  const passwordHash = await bcrypt.hash(rootPassword, 10);
-  await users.insertOne({
-    email: rootEmail.toLowerCase(),
-    passwordHash,
-    fullName: 'Root User',
-    roles: ['root'],
-    createdAt: new Date(),
-  });
+    const passwordHash = await bcrypt.hash(rootPassword, 10);
+    await users.insertOne({
+      email: rootEmail.toLowerCase(),
+      passwordHash,
+      fullName: 'Root User',
+      roles: ['root'],
+      createdAt: new Date(),
+    });
+  } catch (err) {
+    // If DB isn't configured, just log and continue — endpoints that require DB will fail with informative errors.
+    console.warn('seedRootIfNeeded: skipping seed because DB is not configured or reachable:', err.message);
+  }
 }
 
 async function createJwt(payload) {
@@ -95,6 +108,7 @@ async function signOutHandler({ req, res }) {
 }
 
 async function getSessionHandler({ req }) {
+  // seed root user if DB configured — if DB missing this will just log and continue
   await seedRootIfNeeded();
   const cookieHeader = req.headers && req.headers.cookie ? req.headers.cookie : '';
   const match = cookieHeader.match(new RegExp(`${TOKEN_COOKIE_NAME}=([^;]+)`));
