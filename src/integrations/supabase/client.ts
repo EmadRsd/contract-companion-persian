@@ -57,6 +57,16 @@ function createSupabaseClient() {
         async getClaims() {
           return { data: { claims: null }, error: new Error('Supabase not configured') };
         },
+        // Provide a no-op onAuthStateChange compatible with the Supabase client API
+        onAuthStateChange(cb: (event: string, session: any) => void) {
+          // Immediately return an object that matches the real client's shape
+          const subscription = {
+            unsubscribe() {
+              /* no-op */
+            },
+          };
+          return { data: { subscription }, error: null };
+        },
       },
       // Generic noop for other methods (e.g., from client) — return a resolved promise
     } as unknown as ReturnType<typeof createClient<Database>>;
