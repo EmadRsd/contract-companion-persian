@@ -179,7 +179,8 @@ app.post('/api/auth/roles', async (req, res) => {
   }
 });
 
-const port = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+// Use AUTH_PORT env var to avoid colliding with frontend PORT. Default to 8081 if not set.
+const port = process.env.AUTH_PORT ? parseInt(process.env.AUTH_PORT) : 8081;
 app.listen(port, () => {
   console.log(`Auth server listening on port ${port}`);
 });
