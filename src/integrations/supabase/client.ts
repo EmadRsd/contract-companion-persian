@@ -1,9 +1,9 @@
 // Local auth wrapper that replaces supabase client usage in the app.
 // Exposes a minimal supabase-like `auth` surface backed by the local auth endpoints.
 
-// Use VITE_API_BASE when available so client can call the correct origin in dev.
-const API_BASE = (typeof import !== 'undefined' && typeof (import as any).meta !== 'undefined' && (import as any).meta.env && (import as any).meta.env.VITE_API_BASE)
-  ? (import as any).meta.env.VITE_API_BASE
+// Determine API base. Prefer Vite's import.meta.env on the client, fall back to process.env on SSR
+const API_BASE = (typeof window !== 'undefined' && (import.meta && import.meta.env && import.meta.env.VITE_API_BASE))
+  ? String(import.meta.env.VITE_API_BASE).replace(/\/+$/, '')
   : (process.env.VITE_API_BASE || '/api');
 
 function apiPath(path: string) {
