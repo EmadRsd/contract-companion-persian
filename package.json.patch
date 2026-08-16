@@ -1,0 +1,1 @@
+{"scripts": {"dev:server": "node ./server/auth-server.js"}}
