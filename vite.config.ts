@@ -12,4 +12,23 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Add Vite options here, including a dev proxy for /api to the auth server.
+  vite: {
+    // Enable tsconfig path resolution natively if you removed the plugin
+    resolve: {
+      tsconfigPaths: true,
+    },
+    server: {
+      proxy: {
+        // Forward /api/* requests to the local auth server during development.
+        // This keeps the same-origin context so cookies are sent and you avoid CORS/SameSite issues.
+        '/api': {
+          target: 'http://localhost:8081',
+          changeOrigin: true,
+          secure: false,
+          // keep the path as-is, no rewrite
+        },
+      },
+    },
+  },
 });
