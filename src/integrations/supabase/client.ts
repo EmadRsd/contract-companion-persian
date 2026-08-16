@@ -1,16 +1,28 @@
 // Local auth wrapper that replaces supabase client usage in the app.
-// Exposes a minimal supabase-like `auth` surface backed by the local /api/auth endpoints.
+// Exposes a minimal supabase-like `auth` surface backed by the local auth endpoints.
+
+// Use VITE_API_BASE when available so client can call the correct origin in dev.
+const API_BASE = (typeof import !== 'undefined' && typeof (import as any).meta !== 'undefined' && (import as any).meta.env && (import as any).meta.env.VITE_API_BASE)
+  ? (import as any).meta.env.VITE_API_BASE
+  : (process.env.VITE_API_BASE || '/api');
+
+function apiPath(path: string) {
+  const base = (API_BASE || '/api').replace(/\/+$/, '');
+  if (!path.startsWith('/')) path = '/' + path;
+  return base + path;
+}
+
 export const supabase = {
   auth: {
     async getSession() {
-      const res = await fetch('/api/auth/session', { credentials: 'include' });
+      const res = await fetch(apiPath('/auth/session'), { credentials: 'include' });
       const json = await res.json();
       // normalize to supabase shape: { data: { session: ... } }
       return { data: { session: json.user || null } };
     },
 
     async signInWithPassword({ email, password }: { email: string; password: string }) {
-      const res = await fetch('/api/auth/signin', {
+      const res = await fetch(apiPath('/auth/signin'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -24,7 +36,7 @@ export const supabase = {
     },
 
     async signUp({ email, password, options }: any) {
-      const res = await fetch('/api/auth/users', {
+      const res = await fetch(apiPath('/auth/users'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -36,7 +48,7 @@ export const supabase = {
     },
 
     async signOut() {
-      const res = await fetch('/api/auth/signout', {
+      const res = await fetch(apiPath('/auth/signout'), {
         method: 'POST',
         credentials: 'include',
       });
@@ -51,7 +63,7 @@ export const supabase = {
       async function check() {
         if (stopped) return;
         try {
-          const res = await fetch('/api/auth/session', { credentials: 'include' });
+          const res = await fetch(apiPath('/auth/session'), { credentials: 'include' });
           const json = await res.json();
           const user = json.user ?? null;
           if (JSON.stringify(user) !== JSON.stringify(lastUser)) {
