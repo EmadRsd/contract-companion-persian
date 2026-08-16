@@ -9,6 +9,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "dev:server": "node ./server/auth-server.js",
+    "seed": "node ./server/seed.js",
+    "seed:force": "node ./server/seed.js --force",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
