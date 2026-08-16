@@ -26,7 +26,6 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
-
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
@@ -39,8 +38,36 @@ function createSupabaseClient() {
       ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.warn(`[Supabase] ${message}`);
+
+    // Return a safe fallback client so the app doesn't crash when Supabase isn't configured.
+    // The fallback provides common auth methods used in the app with sensible defaults.
+    const fallback = {
+      auth: {
+        async getSession() {
+          return { data: { session: null } };
+        },
+        async signInWithPassword() {
+          return { error: { message: 'Supabase is not configured' } };
+        },
+        async signUp() {
+          return { error: { message: 'Supabase is not configured' } };
+        },
+        // getClaims is used on server-side only; here we provide a stub
+        async getClaims() {
+          return { data: { claims: null }, error: new Error('Supabase not configured') };
+        },
+      },
+      // Generic noop for other methods (e.g., from client) — return a resolved promise
+    } as unknown as ReturnType<typeof createClient<Database>>;
+
+    // Provide a Proxy that returns no-op async functions for any other properties to avoid runtime errors
+    return new Proxy(fallback, {
+      get(target, prop) {
+        if (prop in target) return (target as any)[prop];
+        return async () => ({ error: { message: 'Supabase is not configured' } });
+      },
+    });
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -62,7 +89,6 @@ let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
   get(_, prop, receiver) {
     if (!_supabase) _supabase = createSupabaseClient();
-    return Reflect.get(_supabase, prop, receiver);
+    return Reflect.get(_supabase as any, prop, receiver);
   },
 });
-
