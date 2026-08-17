@@ -1,8 +1,6 @@
-import type { Database } from "@/integrations/supabase/types";
+import type { AppRole, ContractStatus, ItemState } from "./types";
 
-export type AppRole = Database["public"]["Enums"]["app_role"];
-export type ItemState = Database["public"]["Enums"]["item_state"];
-export type ContractStatus = Database["public"]["Enums"]["contract_status"];
+export type { AppRole, ContractStatus, ItemState };
 
 export const roleLabels: Record<AppRole, string> = {
   admin: "مدیر سیستم",
