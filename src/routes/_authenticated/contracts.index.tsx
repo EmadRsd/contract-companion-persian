@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { createContractFn, listContractsFn } from "@/lib/api.functions";
 import { useAuth } from "@/hooks/useAuth";
 import {
   contractStatusLabels,
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/contracts/")({
 });
 
 function ContractsPage() {
-  const { userId, roles } = useAuth();
+  const { roles } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "all">("all");
@@ -67,31 +67,22 @@ function ContractsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["contracts"],
-    queryFn: async () => {
-      const [contracts, items] = await Promise.all([
-        supabase.from("contracts").select("*").order("created_at", { ascending: false }),
-        supabase.from("contract_items").select("id, contract_id, state"),
-      ]);
-      if (contracts.error) throw contracts.error;
-      return { contracts: contracts.data ?? [], items: items.data ?? [] };
-    },
+    queryFn: () => listContractsFn(),
   });
 
   const createContract = useMutation({
-    mutationFn: async () => {
-      if (!userId) throw new Error("no user");
-      const { error } = await supabase.from("contracts").insert({
-        title: form.title,
-        counterparty: form.counterparty,
-        description: form.description,
-        value: form.value ? Number(form.value) : 0,
-        start_date: form.start_date || null,
-        end_date: form.end_date || null,
-        status: form.status,
-        created_by: userId,
-      });
-      if (error) throw error;
-    },
+    mutationFn: () =>
+      createContractFn({
+        data: {
+          title: form.title,
+          counterparty: form.counterparty,
+          description: form.description,
+          value: form.value ? Number(form.value) : 0,
+          start_date: form.start_date || null,
+          end_date: form.end_date || null,
+          status: form.status,
+        },
+      }),
     onSuccess: () => {
       toast.success("قرارداد ایجاد شد");
       setOpen(false);
@@ -235,7 +226,10 @@ function ContractsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+        >
           <SelectTrigger className="w-44">
             <SelectValue />
           </SelectTrigger>

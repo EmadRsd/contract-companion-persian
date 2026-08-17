@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, ListChecks, MessagesSquare, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { dashboardFn } from "@/lib/api.functions";
 import { useAuth } from "@/hooks/useAuth";
 import {
   contractStatusLabels,
@@ -35,22 +35,7 @@ function Dashboard() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
-    queryFn: async () => {
-      const [contracts, items, comments] = await Promise.all([
-        supabase
-          .from("contracts")
-          .select("*")
-          .order("updated_at", { ascending: false })
-          .limit(200),
-        supabase.from("contract_items").select("id, state, contract_id"),
-        supabase.from("comments").select("id"),
-      ]);
-      return {
-        contracts: contracts.data ?? [],
-        items: items.data ?? [],
-        comments: comments.data ?? [],
-      };
-    },
+    queryFn: () => dashboardFn(),
   });
 
   if (isLoading || !data) {
@@ -72,8 +57,12 @@ function Dashboard() {
   const stats = [
     { icon: FileText, label: "قراردادها", value: data.contracts.length },
     { icon: ListChecks, label: "بندها", value: data.items.length },
-    { icon: MessagesSquare, label: "گفتگوها", value: data.comments.length },
-    { icon: Clock, label: "قراردادهای جاری", value: data.contracts.filter((c) => c.status === "active").length },
+    { icon: MessagesSquare, label: "گفتگوها", value: data.commentCount },
+    {
+      icon: Clock,
+      label: "قراردادهای جاری",
+      value: data.contracts.filter((c) => c.status === "active").length,
+    },
   ];
 
   return (
