@@ -1,24 +1,48 @@
-# Contract Companion
+# سامانه مدیریت چرخه عمر قرارداد (CLM)
 
-create a contract lifecycle manager with django persian language, features: ability to login and chat under contract content for users, role based access, ability to change contarct into items to discuse, ability to show or change contract items into not done yet - proccessing or done state and much more that a clm web panel can do
+پنل فارسی مدیریت قراردادها با MongoDB، ورود با نام کاربری/رمز عبور و دسترسی نقش‌محور.
+هیچ سرویس بیرونی‌ای فراخوانی نمی‌شود؛ همه چیز روی سیستم خودتان اجرا می‌شود.
 
-This project was built with [Lovable](https://lovable.dev).
+## اجرای محلی
 
-## Build with Lovable
+1. MongoDB را اجرا کنید (نمونه با داکر):
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/dccbcdfc-cfbe-487a-8fb3-7be96f5e3e9d).
+   ```bash
+   docker run -d --name clm-mongo -p 27017:27017 mongo:7
+   ```
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+2. مقادیر فایل `.env` را در صورت نیاز تغییر دهید:
 
-## Development
+   ```
+   MONGODB_URI="mongodb://127.0.0.1:27017"
+   MONGODB_DB="clm"
+   ROOT_USERNAME="root"
+   ROOT_PASSWORD="1ye@XH55"
+   ROOT_EMAIL="root@local"
+   AUTH_SECRET="change-me-to-a-long-random-string"
+   ```
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+   `AUTH_SECRET` را حتماً به یک رشته تصادفی بلند تغییر دهید.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+3. نصب و اجرا:
+
+   ```bash
+   bun install   # یا npm install
+   bun run dev   # http://localhost:8080
+   ```
+
+در اولین اتصال به پایگاه‌داده، کاربر ریشه (`root`) به‌صورت خودکار ساخته می‌شود
+و می‌تواند کاربران جدید بسازد و نقش‌ها را تخصیص دهد.
+
+## نقش‌ها
+
+- مدیر سیستم (admin): دسترسی کامل + مدیریت کاربران و نقش‌ها
+- مالک قرارداد (owner): ایجاد/حذف قرارداد و بند، تغییر وضعیت
+- بازبین (reviewer): تغییر وضعیت بندها و ثبت نظر
+- مشاهده‌گر (viewer): فقط مشاهده
+
+## ساخت نسخه تولید
+
+```bash
+bun run build
 ```
