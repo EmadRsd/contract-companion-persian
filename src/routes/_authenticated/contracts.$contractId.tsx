@@ -3,7 +3,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ArrowRight, Plus, Send, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  addCommentFn,
+  addItemsFn,
+  deleteContractFn,
+  deleteItemFn,
+  getContractFn,
+  setItemStateFn,
+  updateContractStatusFn,
+} from "@/lib/api.functions";
 import { useAuth } from "@/hooks/useAuth";
 import {
   contractStatusLabels,
@@ -62,7 +70,7 @@ function initials(name: string | null | undefined) {
 
 function ContractDetail() {
   const { contractId } = Route.useParams();
-  const { userId, roles } = useAuth();
+  const { roles } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -78,61 +86,15 @@ function ContractDetail() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["contract", contractId],
-    queryFn: async () => {
-      const [contract, items, comments, profiles, activity] = await Promise.all([
-        supabase.from("contracts").select("*").eq("id", contractId).maybeSingle(),
-        supabase
-          .from("contract_items")
-          .select("*")
-          .eq("contract_id", contractId)
-          .order("position", { ascending: true }),
-        supabase
-          .from("comments")
-          .select("*")
-          .eq("contract_id", contractId)
-          .order("created_at", { ascending: true }),
-        supabase.from("profiles").select("id, full_name, email"),
-        supabase
-          .from("activity_log")
-          .select("*")
-          .eq("contract_id", contractId)
-          .order("created_at", { ascending: false })
-          .limit(40),
-      ]);
-      if (contract.error) throw contract.error;
-      return {
-        contract: contract.data,
-        items: items.data ?? [],
-        comments: comments.data ?? [],
-        profiles: profiles.data ?? [],
-        activity: activity.data ?? [],
-      };
-    },
+    queryFn: () => getContractFn({ data: { contractId } }),
   });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["contract", contractId] });
-
-  async function log(action: string) {
-    if (!userId) return;
-    await supabase.from("activity_log").insert({ contract_id: contractId, user_id: userId, action });
-  }
+  const fail = (prefix: string) => (e: Error) => toast.error(`${prefix}: ${e.message}`);
 
   const addItem = useMutation({
-    mutationFn: async (payload: { title: string; content: string }[]) => {
-      if (!userId) throw new Error("no user");
-      const base = data?.items.length ?? 0;
-      const { error } = await supabase.from("contract_items").insert(
-        payload.map((p, idx) => ({
-          contract_id: contractId,
-          title: p.title,
-          content: p.content,
-          position: base + idx,
-          created_by: userId,
-        })),
-      );
-      if (error) throw error;
-      await log(`${payload.length} بند به قرارداد اضافه شد`);
-    },
+    mutationFn: (payload: { title: string; content: string }[]) =>
+      addItemsFn({ data: { contractId, items: payload } }),
     onSuccess: () => {
       toast.success("بندها ثبت شدند");
       setItemDialog(false);
@@ -140,73 +102,55 @@ function ContractDetail() {
       setNewItem({ title: "", content: "" });
       refresh();
     },
-    onError: (e: Error) => toast.error("ثبت نشد: " + e.message),
+    onError: fail("ثبت نشد"),
   });
 
   const setState = useMutation({
-    mutationFn: async ({ id, state, title }: { id: string; state: ItemState; title: string }) => {
-      const { error } = await supabase.from("contract_items").update({ state }).eq("id", id);
-      if (error) throw error;
-      await log(`وضعیت بند «${title}» به «${itemStateLabels[state]}» تغییر کرد`);
-    },
+    mutationFn: ({ id, state }: { id: string; state: ItemState }) =>
+      setItemStateFn({ data: { itemId: id, state, label: itemStateLabels[state] } }),
     onSuccess: () => refresh(),
-    onError: (e: Error) => toast.error("تغییر وضعیت ناموفق: " + e.message),
+    onError: fail("تغییر وضعیت ناموفق"),
   });
 
   const deleteItem = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("contract_items").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => deleteItemFn({ data: { itemId: id } }),
     onSuccess: () => {
       toast.success("بند حذف شد");
       setActiveItem(null);
       refresh();
     },
-    onError: (e: Error) => toast.error("حذف ناموفق: " + e.message),
+    onError: fail("حذف ناموفق"),
   });
 
   const setContractStatus = useMutation({
-    mutationFn: async (status: ContractStatus) => {
-      const { error } = await supabase.from("contracts").update({ status }).eq("id", contractId);
-      if (error) throw error;
-      await log(`وضعیت قرارداد به «${contractStatusLabels[status]}» تغییر کرد`);
-    },
+    mutationFn: (status: ContractStatus) =>
+      updateContractStatusFn({
+        data: { contractId, status, label: contractStatusLabels[status] },
+      }),
     onSuccess: () => {
       toast.success("وضعیت قرارداد به‌روزرسانی شد");
       refresh();
     },
-    onError: (e: Error) => toast.error("به‌روزرسانی ناموفق: " + e.message),
+    onError: fail("به‌روزرسانی ناموفق"),
   });
 
   const deleteContract = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("contracts").delete().eq("id", contractId);
-      if (error) throw error;
-    },
+    mutationFn: () => deleteContractFn({ data: { contractId } }),
     onSuccess: () => {
       toast.success("قرارداد حذف شد");
       navigate({ to: "/contracts" });
     },
-    onError: (e: Error) => toast.error("حذف ناموفق: " + e.message),
+    onError: fail("حذف ناموفق"),
   });
 
   const sendComment = useMutation({
-    mutationFn: async () => {
-      if (!userId || !message.trim()) return;
-      const { error } = await supabase.from("comments").insert({
-        contract_id: contractId,
-        item_id: activeItem,
-        user_id: userId,
-        body: message.trim(),
-      });
-      if (error) throw error;
-    },
+    mutationFn: () =>
+      addCommentFn({ data: { contractId, itemId: activeItem, body: message.trim() } }),
     onSuccess: () => {
       setMessage("");
       refresh();
     },
-    onError: (e: Error) => toast.error("ارسال نشد: " + e.message),
+    onError: fail("ارسال نشد"),
   });
 
   function splitDescription() {
@@ -219,25 +163,20 @@ function ContractDetail() {
       toast.error("متن قرارداد برای تبدیل به بند خالی است");
       return;
     }
-    addItem.mutate(
-      parts.map((p, i) => ({
-        title: `بند ${i + 1}`,
-        content: p,
-      })),
-    );
+    addItem.mutate(parts.map((p, i) => ({ title: `بند ${i + 1}`, content: p })));
   }
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return <Skeleton className="h-96 rounded-xl" />;
   }
-  if (!data.contract) {
+  if (!data) {
     return <div className="panel p-12 text-center text-sm">قرارداد یافت نشد.</div>;
   }
 
   const contract = data.contract;
   const nameOf = (id: string) => {
-    const p = data.profiles.find((x) => x.id === id);
-    return p?.full_name ?? p?.email ?? "کاربر";
+    const u = data.users.find((x) => x.id === id);
+    return u?.full_name ?? u?.username ?? "کاربر";
   };
   const doneCount = data.items.filter((i) => i.state === "done").length;
   const threadComments = data.comments.filter((c) => c.item_id === activeItem);
@@ -388,11 +327,7 @@ function ContractDetail() {
                     <Select
                       value={activeItemData.state}
                       onValueChange={(v) =>
-                        setState.mutate({
-                          id: activeItemData.id,
-                          state: v as ItemState,
-                          title: activeItemData.title,
-                        })
+                        setState.mutate({ id: activeItemData.id, state: v as ItemState })
                       }
                     >
                       <SelectTrigger className="w-40">
@@ -468,9 +403,7 @@ function ContractDetail() {
                     </Button>
                   </form>
                 ) : (
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    نقش شما اجازه ثبت نظر ندارد.
-                  </p>
+                  <p className="mt-4 text-xs text-muted-foreground">نقش شما اجازه ثبت نظر ندارد.</p>
                 )}
               </div>
             </div>

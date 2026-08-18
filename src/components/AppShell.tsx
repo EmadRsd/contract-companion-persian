@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileText, LayoutDashboard, LogOut, Users, ScrollText } from "lucide-react";
 import type { ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { clearToken } from "@/lib/session";
 import { useAuth } from "@/hooks/useAuth";
 import { permissions, roleLabels } from "@/lib/clm";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,15 @@ const nav = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { fullName, email, roles } = useAuth();
+  const { fullName, username, roles } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
+    clearToken();
     queryClient.clear();
-    await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <div className="rounded-xl bg-sidebar-accent/50 p-3">
-          <p className="truncate text-sm font-semibold">{fullName ?? email}</p>
+          <p className="truncate text-sm font-semibold">{fullName ?? username}</p>
           <p className="mt-1 text-[11px] text-sidebar-foreground/60">
             {roles.length ? roles.map((r) => roleLabels[r]).join("، ") : "بدون نقش"}
           </p>
