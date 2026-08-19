@@ -7,6 +7,8 @@ export interface UserDoc extends Document {
   username: string;
   full_name: string;
   email: string;
+  city: string;
+  department: string;
   password_hash: string;
   roles: string[];
   is_root: boolean;
@@ -18,9 +20,18 @@ export interface ContractDoc extends Document {
   counterparty: string;
   description: string;
   value: number;
+  city: string;
+  department: string;
+  category: string;
+  tags: string[];
+  assignees: string[];
   start_date: string | null;
   end_date: string | null;
+  signature_date: string | null;
+  renewal_alert_days: number;
   status: string;
+  is_template: boolean;
+  version: number;
   created_by: string;
   created_at: Date;
   updated_at: Date;
@@ -51,6 +62,44 @@ export interface ActivityDoc extends Document {
   created_at: Date;
 }
 
+export interface AttachmentDoc extends Document {
+  contract_id: string;
+  name: string;
+  content_type: string;
+  size: number;
+  data_url: string;
+  uploaded_by: string;
+  created_at: Date;
+}
+
+export interface VersionDoc extends Document {
+  contract_id: string;
+  version: number;
+  note: string;
+  snapshot_title: string;
+  snapshot_description: string;
+  created_by: string;
+  created_at: Date;
+}
+
+export interface SignatureDoc extends Document {
+  contract_id: string;
+  user_id: string;
+  signer_name: string;
+  signer_title: string;
+  created_at: Date;
+}
+
+export interface ApprovalDoc extends Document {
+  contract_id: string;
+  step: number;
+  user_id: string;
+  status: string;
+  note: string;
+  decided_at: Date | null;
+  created_at: Date;
+}
+
 let clientPromise: Promise<MongoClient> | undefined;
 let readyPromise: Promise<Db> | undefined;
 
@@ -73,9 +122,14 @@ async function connect(): Promise<Db> {
 async function bootstrap(db: Db): Promise<Db> {
   const users = db.collection<UserDoc>("users");
   await users.createIndex({ username: 1 }, { unique: true });
+  await db.collection<ContractDoc>("contracts").createIndex({ city: 1, status: 1 });
   await db.collection<ItemDoc>("contract_items").createIndex({ contract_id: 1, position: 1 });
   await db.collection<CommentDoc>("comments").createIndex({ contract_id: 1, created_at: 1 });
   await db.collection<ActivityDoc>("activity_log").createIndex({ contract_id: 1, created_at: -1 });
+  await db.collection<AttachmentDoc>("attachments").createIndex({ contract_id: 1 });
+  await db.collection<VersionDoc>("contract_versions").createIndex({ contract_id: 1, version: -1 });
+  await db.collection<SignatureDoc>("signatures").createIndex({ contract_id: 1 });
+  await db.collection<ApprovalDoc>("approvals").createIndex({ contract_id: 1, step: 1 });
 
   const rootUsername = process.env["ROOT_USERNAME"] ?? "root";
   const rootPassword = process.env["ROOT_PASSWORD"] ?? "1ye@XH55";
@@ -85,6 +139,8 @@ async function bootstrap(db: Db): Promise<Db> {
       username: rootUsername,
       full_name: "مدیر ارشد سیستم",
       email: process.env["ROOT_EMAIL"] ?? `${rootUsername}@local`,
+      city: "تهران",
+      department: "مدیریت",
       password_hash: await hashPassword(rootPassword),
       roles: ["admin"],
       is_root: true,
@@ -117,6 +173,10 @@ export async function collections(): Promise<{
   items: Collection<ItemDoc>;
   comments: Collection<CommentDoc>;
   activity: Collection<ActivityDoc>;
+  attachments: Collection<AttachmentDoc>;
+  versions: Collection<VersionDoc>;
+  signatures: Collection<SignatureDoc>;
+  approvals: Collection<ApprovalDoc>;
 }> {
   const db = await getDb();
   return {
@@ -125,5 +185,9 @@ export async function collections(): Promise<{
     items: db.collection<ItemDoc>("contract_items"),
     comments: db.collection<CommentDoc>("comments"),
     activity: db.collection<ActivityDoc>("activity_log"),
+    attachments: db.collection<AttachmentDoc>("attachments"),
+    versions: db.collection<VersionDoc>("contract_versions"),
+    signatures: db.collection<SignatureDoc>("signatures"),
+    approvals: db.collection<ApprovalDoc>("approvals"),
   };
 }
