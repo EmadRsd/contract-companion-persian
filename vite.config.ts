@@ -12,4 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    resolve: {
+      alias: [
+        // The MongoDB driver pulls in `tr46`, which requires the legacy "punycode/" path.
+        { find: /^punycode\/$/, replacement: "punycode" },
+      ],
+    },
+  },
 });
