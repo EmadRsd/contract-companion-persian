@@ -18,11 +18,24 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    resolve: {
-      alias: [
-        // The MongoDB driver pulls in `tr46`, which requires the legacy "punycode/" path.
-        { find: /^punycode\/?$/, replacement: punycodePath },
-      ],
-    },
+    plugins: [
+      {
+        // The MongoDB driver pulls in `tr46`, which uses the legacy `require("punycode/")`
+        // specifier. The trailing slash cannot be resolved by the worker bundler, so rewrite
+        // it to the real userland package before bundling.
+        name: "fix-tr46-punycode",
+        enforce: "pre" as const,
+        transform(code: string, id: string) {
+          if (!id.includes("tr46") || !code.includes('require("punycode/")')) return null;
+          return {
+            code: code.replace(
+              'require("punycode/")',
+              `require(${JSON.stringify(punycodePath)})`,
+            ),
+            map: null,
+          };
+        },
+      },
+    ],
   },
 });
