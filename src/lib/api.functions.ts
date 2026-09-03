@@ -267,3 +267,10 @@ export const signContractFn = createServerFn({ method: "POST" })
     const { signContract } = await import("./api.server");
     return signContract(context.user, data.contractId, data.signerTitle);
   });
+
+export const workspaceFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .handler(async ({ context }) => {
+    const { workspaceData } = await import("./api.server");
+    return workspaceData(context.user);
+  });

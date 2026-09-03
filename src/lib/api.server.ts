@@ -755,3 +755,49 @@ export async function reportsData(actor: UserDTO) {
     audit: ac.map((d) => ({ ...toActivity(d), contract_title: titles.get(d.contract_id) ?? "—" })),
   };
 }
+
+/** Aggregated feed powering dashboard, tasks, approvals, calendar, reports and audit pages. */
+export async function workspaceData(actor: UserDTO) {
+  const { contracts, items, users, activity, comments, approvals, signatures, attachments } =
+    await collections();
+  const all = await contracts.find(scopeFilter(actor)).sort({ updated_at: -1 }).toArray();
+  const live = all.filter((d) => !d.is_template);
+  const ids = live.map((d) => d._id.toString());
+  const [i, us, ac, cm, ap, sg, at] = await Promise.all([
+    items.find({ contract_id: { $in: ids } }).toArray(),
+    users.find().toArray(),
+    activity
+      .find({ contract_id: { $in: ids } })
+      .sort({ created_at: -1 })
+      .limit(250)
+      .toArray(),
+    comments.countDocuments({ contract_id: { $in: ids } }),
+    approvals.find({ contract_id: { $in: ids } }).sort({ step: 1 }).toArray(),
+    signatures.find({ contract_id: { $in: ids } }).toArray(),
+    attachments
+      .find({ contract_id: { $in: ids } }, { projection: { data_url: 0 } })
+      .sort({ created_at: -1 })
+      .toArray(),
+  ]);
+  const titles = new Map(live.map((d) => [d._id.toString(), d.title]));
+  return {
+    contracts: live.map(toContract),
+    templates: all.filter((d) => d.is_template).map(toContract),
+    items: i.map(toItem),
+    users: us.map(toUser),
+    commentCount: cm,
+    approvals: ap.map(toApproval),
+    signatures: sg.map(toSignature),
+    attachments: at.map((d) => ({
+      id: d._id.toString(),
+      contract_id: d.contract_id,
+      name: d.name,
+      content_type: d.content_type,
+      size: d.size,
+      uploaded_by: d.uploaded_by,
+      created_at: new Date(d.created_at).toISOString(),
+      contract_title: titles.get(d.contract_id) ?? "—",
+    })),
+    audit: ac.map((d) => ({ ...toActivity(d), contract_title: titles.get(d.contract_id) ?? "—" })),
+  };
+}
