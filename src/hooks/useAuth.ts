@@ -8,6 +8,8 @@ export interface SessionInfo {
   username: string | null;
   email: string | null;
   fullName: string | null;
+  city: string;
+  department: string;
   isRoot: boolean;
   roles: AppRole[];
 }
@@ -17,6 +19,8 @@ const empty: SessionInfo = {
   username: null,
   email: null,
   fullName: null,
+  city: "",
+  department: "",
   isRoot: false,
   roles: [],
 };
@@ -33,6 +37,8 @@ export function useAuth() {
         username: user.username,
         email: user.email,
         fullName: user.full_name,
+        city: user.city ?? "",
+        department: user.department ?? "",
         isRoot: user.is_root,
         roles: user.roles,
       };

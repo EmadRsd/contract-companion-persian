@@ -11,7 +11,15 @@ import {
   updateUserRolesFn,
 } from "@/lib/api.functions";
 import { useAuth } from "@/hooks/useAuth";
-import { faDate, permissions, roleLabels, roleOrder, type AppRole } from "@/lib/clm";
+import {
+  cities,
+  departments,
+  faDate,
+  permissions,
+  roleLabels,
+  roleOrder,
+  type AppRole,
+} from "@/lib/clm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +51,8 @@ const emptyForm = {
   password: "",
   full_name: "",
   email: "",
+  city: "",
+  department: "",
   roles: ["viewer"] as AppRole[],
 };
 
@@ -231,6 +241,38 @@ function UsersPage() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>شهر</Label>
+                <select
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                >
+                  <option value="">انتخاب شهر</option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>واحد سازمانی</Label>
+                <select
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  value={form.department}
+                  onChange={(e) => setForm({ ...form, department: e.target.value })}
+                >
+                  <option value="">انتخاب واحد</option>
+                  {departments.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>رمز عبور</Label>
