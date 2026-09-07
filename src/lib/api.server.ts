@@ -801,3 +801,38 @@ export async function workspaceData(actor: UserDTO) {
     audit: ac.map((d) => ({ ...toActivity(d), contract_title: titles.get(d.contract_id) ?? "—" })),
   };
 }
+
+// ---------------- Self service (profile & password) ----------------
+
+export async function updateOwnProfile(
+  actor: UserDTO,
+  input: { full_name: string; email: string; city: string; department: string },
+) {
+  const { users } = await collections();
+  await users.updateOne(
+    { _id: oid(actor.id) },
+    {
+      $set: {
+        full_name: input.full_name.trim() || actor.username,
+        email: input.email.trim(),
+        city: can.admin(actor) ? input.city.trim() : actor.city,
+        department: input.department.trim(),
+      },
+    },
+  );
+  return { ok: true };
+}
+
+export async function changeOwnPassword(
+  actor: UserDTO,
+  input: { current: string; next: string },
+) {
+  assert(input.next.length >= 6, "رمز عبور جدید باید حداقل ۶ نویسه باشد");
+  const { users } = await collections();
+  const doc = await users.findOne({ _id: oid(actor.id) });
+  assert(!!doc, "کاربر یافت نشد");
+  const { verifyPassword, hashPassword: hash } = await import("./auth.server");
+  assert(await verifyPassword(input.current, doc!.password_hash), "رمز عبور فعلی نادرست است");
+  await users.updateOne({ _id: oid(actor.id) }, { $set: { password_hash: await hash(input.next) } });
+  return { ok: true };
+}

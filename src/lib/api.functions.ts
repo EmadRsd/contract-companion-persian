@@ -274,3 +274,21 @@ export const workspaceFn = createServerFn({ method: "POST" })
     const { workspaceData } = await import("./api.server");
     return workspaceData(context.user);
   });
+
+export const updateOwnProfileFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .inputValidator(
+    (input: { full_name: string; email: string; city: string; department: string }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { updateOwnProfile } = await import("./api.server");
+    return updateOwnProfile(context.user, data);
+  });
+
+export const changeOwnPasswordFn = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .inputValidator((input: { current: string; next: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { changeOwnPassword } = await import("./api.server");
+    return changeOwnPassword(context.user, data);
+  });
