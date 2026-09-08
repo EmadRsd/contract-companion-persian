@@ -117,7 +117,7 @@ function Settings() {
               <div className="space-y-2">
                 <Label>شهر</Label>
                 <Select
-                  value={form.city || undefined}
+                  value={form.city}
                   onValueChange={(v) => setForm({ ...form, city: v })}
                   disabled={!isAdmin}
                 >
@@ -141,7 +141,7 @@ function Settings() {
               <div className="space-y-2">
                 <Label>واحد سازمانی</Label>
                 <Select
-                  value={form.department || undefined}
+                  value={form.department}
                   onValueChange={(v) => setForm({ ...form, department: v })}
                 >
                   <SelectTrigger>
