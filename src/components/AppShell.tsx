@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Bell,
+  Building2,
   CalendarDays,
   ChevronRight,
   ClipboardList,
+  FileArchive,
   FileStack,
   FileText,
   LayoutDashboard,
@@ -12,10 +15,12 @@ import {
   Menu,
   Plus,
   ScrollText,
+  Settings,
   ShieldCheck,
   BarChart3,
   Users,
 } from "lucide-react";
+
 import type { ReactNode } from "react";
 import { clearToken } from "@/lib/session";
 import { useAuth } from "@/hooks/useAuth";
