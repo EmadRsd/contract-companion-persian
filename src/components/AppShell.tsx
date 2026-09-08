@@ -42,10 +42,15 @@ const baseNav = [
   { to: "/tasks", label: "کارهای من", icon: ClipboardList },
   { to: "/approvals", label: "تأییدها", icon: ShieldCheck },
   { to: "/templates", label: "قالب‌ها", icon: FileStack },
+  { to: "/counterparties", label: "طرف‌های قرارداد", icon: Building2 },
+  { to: "/documents", label: "اسناد", icon: FileArchive },
   { to: "/calendar", label: "تقویم", icon: CalendarDays },
+  { to: "/notifications", label: "اعلان‌ها", icon: Bell },
   { to: "/reports", label: "گزارش‌ها و تحلیل", icon: BarChart3 },
   { to: "/audit", label: "گزارش ممیزی", icon: ScrollText },
+  { to: "/settings", label: "تنظیمات", icon: Settings },
 ] as const;
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { fullName, username, roles, department } = useAuth();
