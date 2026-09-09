@@ -49,6 +49,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ApprovalPanel, DocumentsPanel } from "@/components/ContractWorkflow";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/contracts/$contractId")({
@@ -70,7 +71,7 @@ function initials(name: string | null | undefined) {
 
 function ContractDetail() {
   const { contractId } = Route.useParams();
-  const { roles } = useAuth();
+  const { roles, userId } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -251,9 +252,11 @@ function ContractDetail() {
       </div>
 
       <Tabs defaultValue="items" dir="rtl">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="items">بندهای قرارداد</TabsTrigger>
           <TabsTrigger value="text">متن قرارداد</TabsTrigger>
+          <TabsTrigger value="approvals">تأیید و امضا</TabsTrigger>
+          <TabsTrigger value="docs">اسناد و نسخه‌ها</TabsTrigger>
           <TabsTrigger value="activity">تاریخچه فعالیت</TabsTrigger>
         </TabsList>
 
@@ -415,6 +418,30 @@ function ContractDetail() {
             {contract.description || "متنی ثبت نشده است."}
           </div>
         </TabsContent>
+
+        <TabsContent value="approvals" className="mt-4">
+          <ApprovalPanel
+            contractId={contractId}
+            users={data.users}
+            approvals={data.approvals}
+            signatures={data.signatures}
+            currentUserId={userId}
+            canManage={canManage}
+            onRefresh={refresh}
+          />
+        </TabsContent>
+
+        <TabsContent value="docs" className="mt-4">
+          <DocumentsPanel
+            contractId={contractId}
+            users={data.users}
+            attachments={data.attachments}
+            versions={data.versions}
+            canManage={canManage}
+            onRefresh={refresh}
+          />
+        </TabsContent>
+
 
         <TabsContent value="activity" className="mt-4">
           <div className="panel divide-y p-2">
