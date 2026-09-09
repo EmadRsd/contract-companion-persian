@@ -26,6 +26,7 @@ import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedContractsIndexRouteImport } from './routes/_authenticated/contracts.index'
 import { Route as AuthenticatedContractsContractIdRouteImport } from './routes/_authenticated/contracts.$contractId'
+import { Route as AuthenticatedContractsNewRouteImport } from './routes/_authenticated/contracts.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -115,6 +116,12 @@ const AuthenticatedContractsContractIdRoute =
     path: '/contracts/$contractId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedContractsNewRoute =
+  AuthenticatedContractsNewRouteImport.update({
+    id: '/contracts/new',
+    path: '/contracts/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/templates': typeof AuthenticatedTemplatesRoute
   '/users': typeof AuthenticatedUsersRoute
   '/contracts/$contractId': typeof AuthenticatedContractsContractIdRoute
+  '/contracts/new': typeof AuthenticatedContractsNewRoute
   '/contracts/': typeof AuthenticatedContractsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -150,6 +158,7 @@ export interface FileRoutesByTo {
   '/templates': typeof AuthenticatedTemplatesRoute
   '/users': typeof AuthenticatedUsersRoute
   '/contracts/$contractId': typeof AuthenticatedContractsContractIdRoute
+  '/contracts/new': typeof AuthenticatedContractsNewRoute
   '/contracts': typeof AuthenticatedContractsIndexRoute
 }
 export interface FileRoutesById {
@@ -170,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/contracts/$contractId': typeof AuthenticatedContractsContractIdRoute
+  '/_authenticated/contracts/new': typeof AuthenticatedContractsNewRoute
   '/_authenticated/contracts/': typeof AuthenticatedContractsIndexRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/users'
     | '/contracts/$contractId'
+    | '/contracts/new'
     | '/contracts/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/users'
     | '/contracts/$contractId'
+    | '/contracts/new'
     | '/contracts'
   id:
     | '__root__'
@@ -227,6 +239,7 @@ export interface FileRouteTypes {
     | '/_authenticated/templates'
     | '/_authenticated/users'
     | '/_authenticated/contracts/$contractId'
+    | '/_authenticated/contracts/new'
     | '/_authenticated/contracts/'
   fileRoutesById: FileRoutesById
 }
@@ -357,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContractsContractIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contracts/new': {
+      id: '/_authenticated/contracts/new'
+      path: '/contracts/new'
+      fullPath: '/contracts/new'
+      preLoaderRoute: typeof AuthenticatedContractsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -374,6 +394,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedContractsContractIdRoute: typeof AuthenticatedContractsContractIdRoute
+  AuthenticatedContractsNewRoute: typeof AuthenticatedContractsNewRoute
   AuthenticatedContractsIndexRoute: typeof AuthenticatedContractsIndexRoute
 }
 
@@ -391,6 +412,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedContractsContractIdRoute: AuthenticatedContractsContractIdRoute,
+  AuthenticatedContractsNewRoute: AuthenticatedContractsNewRoute,
   AuthenticatedContractsIndexRoute: AuthenticatedContractsIndexRoute,
 }
 
