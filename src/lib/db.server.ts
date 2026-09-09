@@ -90,6 +90,19 @@ export interface SignatureDoc extends Document {
   created_at: Date;
 }
 
+export interface TaskDoc extends Document {
+  contract_id: string | null;
+  title: string;
+  description: string;
+  assignee: string;
+  created_by: string;
+  due_date: string | null;
+  priority: string;
+  done: boolean;
+  completed_at: Date | null;
+  created_at: Date;
+}
+
 export interface ApprovalDoc extends Document {
   contract_id: string;
   step: number;
@@ -130,6 +143,7 @@ async function bootstrap(db: Db): Promise<Db> {
   await db.collection<VersionDoc>("contract_versions").createIndex({ contract_id: 1, version: -1 });
   await db.collection<SignatureDoc>("signatures").createIndex({ contract_id: 1 });
   await db.collection<ApprovalDoc>("approvals").createIndex({ contract_id: 1, step: 1 });
+  await db.collection<TaskDoc>("tasks").createIndex({ assignee: 1, done: 1, due_date: 1 });
 
   const rootUsername = process.env["ROOT_USERNAME"] ?? "root";
   const rootPassword = process.env["ROOT_PASSWORD"] ?? "1ye@XH55";
@@ -177,6 +191,7 @@ export async function collections(): Promise<{
   versions: Collection<VersionDoc>;
   signatures: Collection<SignatureDoc>;
   approvals: Collection<ApprovalDoc>;
+  tasks: Collection<TaskDoc>;
 }> {
   const db = await getDb();
   return {
@@ -189,5 +204,6 @@ export async function collections(): Promise<{
     versions: db.collection<VersionDoc>("contract_versions"),
     signatures: db.collection<SignatureDoc>("signatures"),
     approvals: db.collection<ApprovalDoc>("approvals"),
+    tasks: db.collection<TaskDoc>("tasks"),
   };
 }
