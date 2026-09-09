@@ -192,6 +192,12 @@ function ContractsPage() {
               <LayoutTemplate className="size-4" />
               ایجاد از قالب
             </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/contracts/new">
+                <Plus className="size-4" />
+                ایجاد گام‌به‌گام
+              </Link>
+            </Button>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
