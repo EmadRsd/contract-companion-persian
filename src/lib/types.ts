@@ -110,3 +110,19 @@ export interface ApprovalDTO {
   decided_at: string | null;
   created_at: string;
 }
+
+export type TaskPriority = "low" | "medium" | "high" | "critical";
+
+export interface TaskDTO {
+  id: string;
+  contract_id: string | null;
+  title: string;
+  description: string;
+  assignee: string;
+  created_by: string;
+  due_date: string | null;
+  priority: TaskPriority;
+  done: boolean;
+  completed_at: string | null;
+  created_at: string;
+}
