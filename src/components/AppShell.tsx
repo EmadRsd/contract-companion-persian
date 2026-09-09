@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import type { ReactNode } from "react";
+import konnectLogo from "@/assets/konnect-logo-main.png.asset.json";
 import { clearToken } from "@/lib/session";
 import { useAuth } from "@/hooks/useAuth";
 import { permissions, roleLabels, COMPANY_NAME } from "@/lib/clm";
@@ -118,7 +119,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const brand = (
     <div className={cn("flex items-center gap-2 px-2", collapsed && "justify-center px-0")}>
-      <ScrollText className="size-6 shrink-0 text-sidebar-primary" />
+      <img
+        src={konnectLogo.url}
+        alt={`لوگو ${COMPANY_NAME}`}
+        className="size-9 shrink-0 rounded-md bg-white/90 object-contain p-1"
+      />
       {!collapsed && (
         <div className="min-w-0">
           <p className="truncate text-sm font-bold">سامانه CLM</p>
